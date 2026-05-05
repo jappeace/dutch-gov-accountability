@@ -162,6 +162,50 @@ Ter vergelijking: de totale gemeentelijke lasten over alle beleidsterreinen
 bedragen EUR 313.545 miljoen, zodat cultuur **0,8%** van alle gemeentelijke
 uitgaven uitmaakt.
 
+### Hoe financieren gemeenten cultuur?
+
+De Iv3-data bevatten zowel lasten (L-categorieën) als baten (B-categorieën) per
+taakveld, zodat we precies kunnen zien waar het geld vandaan komt:
+
+| | Bedrag (mln EUR) |
+|--|--:|
+| Bruto cultuurlasten | 2.475 |
+| Directe cultuurbaten | 354 |
+| **Netto kosten cultuur** | **2.121** |
+
+Slechts EUR 354 miljoen van de EUR 2.475 miljoen aan cultuuruitgaven wordt
+gedekt door directe inkomsten op de cultuurtaakvelden:
+
+| Bron | Bedrag (mln EUR) |
+|------|--:|
+| Huren (verhuur cultureel vastgoed) | 185 |
+| Overige goederen en diensten (kaartverkoop, horeca, etc.) | 64 |
+| Geoormerkte overdrachten van het Rijk | 65 |
+| Overdrachten van provincies | 9 |
+| Overdrachten overige overheden | 19 |
+| Overig (leges, reserves, kapitaaloverdrachten) | 12 |
+| **Totaal directe cultuurbaten** | **354** |
+
+De overige **EUR 2,1 miljard** — 86% van de cultuurkosten — wordt betaald uit
+de algemene middelen van gemeenten. Die algemene middelen bestaan uit:
+
+- **Gemeentefonds** (taakveld 0.7): EUR 44 miljard in 2024 — een lump-sum
+  uitkering van het Rijk aan alle gemeenten. Den Haag bepaalt de omvang, maar
+  gemeenten beslissen *zelf* waaraan ze het besteden.
+- **Lokale belastingen** (OZB, toeristenbelasting, etc.): EUR 8,4 miljard.
+- **Eigen inkomsten** (huur, leges, diensten): EUR 12,4 miljard.
+
+Dit betekent dat de EUR 2,1 miljard netto cultuuruitgaven een **bewuste
+politieke keuze** is van gemeenteraden. Het Rijk stuurt nauwelijks mee: slechts
+EUR 65 miljoen (2,6% van de bruto cultuurlasten) is geoormerkt cultuurbudget.
+De rest komt uit het gemeentefonds en eigen belastingen — geld dat net zo goed
+naar wegen, groen of schuldenreductie had kunnen gaan.
+
+Dit verklaart de bevinding uit de trendanalyse hierboven: de groei van
+cultuuruitgaven wordt voor 68% gedreven door gemeenten, niet door het Rijk.
+Gemeenten *kiezen* ervoor om meer van hun vrij besteedbare budget aan cultuur
+te besteden — het is geen top-down beleid vanuit Den Haag.
+
 ### Per cultuursubcategorie (landelijk totaal, miljoenen EUR)
 
 | Taakveld                                         | Bedrag |
