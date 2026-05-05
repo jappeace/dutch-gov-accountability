@@ -29,17 +29,17 @@ instance FromJSON BudgetRow where
   parseJSON = withObject "BudgetRow" $ \obj -> do
     minister <- obj .:? "begrotingsnaam"
     chapName <- obj .:? "hoofdstuk_naam"
-    chapNum <- obj .:  "hoofdstuk_nummer" .!= ""
+    chapNum <- obj .:? "hoofdstuk_nummer" .!= ""
     artName <- obj .:? "artikel_naam"
-    artNum <- obj .:  "artikel_nummer" .!= ""
+    artNum <- obj .:? "artikel_nummer" .!= ""
     subArtName <- obj .:? "subartikel_naam"
-    subArtNum <- obj .:  "subartikel_nummer" .!= ""
+    subArtNum <- obj .:? "subartikel_nummer" .!= ""
     instrName <- obj .:? "instrument_naam"
-    instrNum <- obj .:  "instrument_nummer" .!= ""
+    instrNum <- obj .:? "instrument_nummer" .!= ""
     regName <- obj .:? "regeling_naam"
-    regNum <- obj .:  "regeling_nummer" .!= ""
-    vuo <- obj .: "vuo"
-    amount <- obj .: "bedrag" .!= 0
+    regNum <- obj .:? "regeling_nummer" .!= ""
+    vuo <- obj .:? "vuo" .!= ""
+    amount <- obj .:? "bedrag" .!= 0
     pure BudgetRow
       { brMinister = minister
       , brChapterName = chapName

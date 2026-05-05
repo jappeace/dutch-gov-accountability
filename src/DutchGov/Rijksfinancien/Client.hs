@@ -9,6 +9,7 @@ module DutchGov.Rijksfinancien.Client
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson (eitherDecode)
+import qualified Data.ByteString.Lazy.Char8 as LBS
 import Data.Text (Text)
 import Network.HTTP.Client
 import Network.HTTP.Types.Status (statusCode)
@@ -49,7 +50,8 @@ fetchBudgetTable manager year phase = liftIO $ do
   case statusCode (responseStatus response) of
     200 -> case eitherDecode (responseBody response) of
       Right rows -> pure (Right (Just rows))
-      Left err   -> pure (Left err)
+      Left err   -> pure (Left $ err ++ "\n  Response body (first 500 chars): "
+                                ++ take 500 (LBS.unpack (responseBody response)))
     404 -> pure (Right Nothing)
     code -> pure (Left $ "HTTP " ++ show code ++ " fetching budget table year="
                         ++ show year ++ " phase=" ++ show phase)
