@@ -78,7 +78,7 @@ BudgetEntry
     UniqueBudgetEntry year phase chapterNumber articleNumber subArticleNumber instrumentNumber regulationNumber vuo
     deriving Show Eq
 
-ScrapeMeta
+SyncMeta
     key Text
     value Text
     UniqueMetaKey key

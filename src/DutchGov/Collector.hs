@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module DutchGov.Scraper
+module DutchGov.Collector
   ( Source(..)
-  , scrapeAll
-  , scrapeCbs
-  , scrapeRijksfinancien
+  , collectAll
+  , collectCbs
+  , collectRijksfinancien
   ) where
 
 import Control.Monad (forM_)
@@ -20,25 +20,25 @@ import DutchGov.CBS.ODataResponse (odataValue)
 import DutchGov.Database
 import DutchGov.Rijksfinancien.Client
 
--- | Which data source to scrape
+-- | Which public data source to collect from
 data Source = SourceCbs | SourceRijksfinancien | SourceAll
   deriving (Show, Eq)
 
--- | Scrape all requested sources into the database.
-scrapeAll :: Source -> ConnectionPool -> IO ()
-scrapeAll source pool = do
+-- | Collect all requested public data sources into the database.
+collectAll :: Source -> ConnectionPool -> IO ()
+collectAll source pool = do
   manager <- newManager tlsManagerSettings
   case source of
-    SourceCbs -> scrapeCbs manager pool
-    SourceRijksfinancien -> scrapeRijksfinancien manager pool
+    SourceCbs -> collectCbs manager pool
+    SourceRijksfinancien -> collectRijksfinancien manager pool
     SourceAll -> do
-      scrapeCbs manager pool
-      scrapeRijksfinancien manager pool
+      collectCbs manager pool
+      collectRijksfinancien manager pool
 
--- | Scrape CBS 84122NED dataset (dimensions + expenditures).
-scrapeCbs :: Manager -> ConnectionPool -> IO ()
-scrapeCbs manager pool = do
-  putStrLn "Scraping CBS dimensions..."
+-- | Collect CBS 84122NED dataset (dimensions + expenditures).
+collectCbs :: Manager -> ConnectionPool -> IO ()
+collectCbs manager pool = do
+  putStrLn "Collecting CBS dimensions..."
 
   -- Fetch and store dimension tables
   fetchAndStore "Overheidsfuncties" (\vals -> runSqlPool (upsertGovFunctions vals) pool)
@@ -46,17 +46,17 @@ scrapeCbs manager pool = do
   fetchAndStore "Sectoren" (\vals -> runSqlPool (upsertSectors vals) pool)
   fetchAndStore "Perioden" (\vals -> runSqlPool (upsertPeriods vals) pool)
 
-  putStrLn "Scraping CBS expenditures..."
+  putStrLn "Collecting CBS expenditures..."
   pageCount <- fetchExpenditures manager 5000 $ \odata -> do
     runSqlPool (upsertExpenditures (odataValue odata)) pool
     putStr "."
   case pageCount of
     Left err -> putStrLn $ "\nError fetching expenditures: " ++ err
     Right () -> do
-      putStrLn "\nCBS scrape complete."
+      putStrLn "\nCBS collection complete."
       now <- getCurrentTime
       let timestamp = Text.pack $ formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S" now
-      runSqlPool (setScrapeMeta "cbs_last_scrape" timestamp) pool
+      runSqlPool (setSyncMeta "cbs_last_sync" timestamp) pool
   where
     fetchAndStore dimension storeAction = do
       result <- fetchDimension manager dimension
@@ -66,10 +66,10 @@ scrapeCbs manager pool = do
           _ <- storeAction vals
           putStrLn $ "  " ++ dimension ++ ": " ++ show (length vals) ++ " entries"
 
--- | Scrape Rijksfinancien budget tables for all years and phases.
-scrapeRijksfinancien :: Manager -> ConnectionPool -> IO ()
-scrapeRijksfinancien manager pool = do
-  putStrLn "Scraping Rijksfinancien budget tables..."
+-- | Collect Rijksfinancien budget tables for all years and phases.
+collectRijksfinancien :: Manager -> ConnectionPool -> IO ()
+collectRijksfinancien manager pool = do
+  putStrLn "Collecting Rijksfinancien budget tables..."
   let years = [2015..2026] :: [Int]
   let phases = [minBound..maxBound] :: [Phase]
 
@@ -88,5 +88,5 @@ scrapeRijksfinancien manager pool = do
 
   now <- getCurrentTime
   let timestamp = Text.pack $ formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S" now
-  runSqlPool (setScrapeMeta "rijksfinancien_last_scrape" timestamp) pool
-  putStrLn "Rijksfinancien scrape complete."
+  runSqlPool (setSyncMeta "rijksfinancien_last_sync" timestamp) pool
+  putStrLn "Rijksfinancien collection complete."

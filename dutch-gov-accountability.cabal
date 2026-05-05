@@ -10,7 +10,7 @@ copyright:      2025 Jappie Klooster
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
-synopsis:       CBS + Rijksfinancien data scraper for Dutch government spending
+synopsis:       CBS + Rijksfinancien public data collector for Dutch government spending
 
 source-repository head
   type: git
@@ -64,7 +64,7 @@ library
       DutchGov.Rijksfinancien.BudgetTable
       DutchGov.Rijksfinancien.Client
       DutchGov.Schema
-      DutchGov.Scraper
+      DutchGov.Collector
   hs-source-dirs:
       src
   build-depends:
@@ -97,11 +97,15 @@ test-suite unit
   ghc-options: -Wno-unused-packages
   other-modules:
       DutchGov.CBS.ODataResponseTest
+      DutchGov.DatabaseTest
       DutchGov.Rijksfinancien.BudgetTableTest
   hs-source-dirs:
       test
   build-depends:
       aeson
     , dutch-gov-accountability
+    , monad-logger
+    , persistent
+    , persistent-sqlite
     , tasty
     , tasty-hunit

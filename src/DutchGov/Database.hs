@@ -8,13 +8,13 @@ module DutchGov.Database
   , upsertPeriods
   , upsertExpenditures
   , upsertBudgetEntries
-  , setScrapeMeta
-  , getScrapeMeta
+  , setSyncMeta
+  , getSyncMeta
   ) where
 
 import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Logger (runStdoutLoggingT)
+import Control.Monad.Logger (runNoLoggingT)
 import Data.Text (Text)
 import Database.Persist.Sqlite
 
@@ -25,7 +25,7 @@ import DutchGov.Rijksfinancien.BudgetTable (BudgetRow(..))
 
 -- | Run a database action with connection pool and auto-migration.
 withDatabase :: Text -> (ConnectionPool -> IO a) -> IO a
-withDatabase dbPath action = runStdoutLoggingT $ do
+withDatabase dbPath action = runNoLoggingT $ do
   withSqlitePool dbPath 1 $ \pool -> do
     liftIO $ runSqlPool (runMigration migrateAll) pool
     liftIO $ action pool
@@ -89,62 +89,49 @@ upsertPeriods values = forM_ values $ \val ->
     , PeriodDescription =. ovDescription val
     ]
 
--- | Upsert CBS expenditure rows.
+-- | Upsert CBS expenditure rows using raw INSERT OR REPLACE for speed.
 upsertExpenditures :: MonadIO m => [CbsExpenditure] -> SqlPersistT m ()
 upsertExpenditures rows = forM_ rows $ \row ->
-  void $ upsertBy (UniqueExpenditure (ceTransactionKey row) (ceFunctionKey row)
-                                     (ceSectorKey row) (cePeriodKey row))
-    Expenditure
-      { expenditureTransactionKey = ceTransactionKey row
-      , expenditureFunctionKey = ceFunctionKey row
-      , expenditureSectorKey = ceSectorKey row
-      , expenditurePeriodKey = cePeriodKey row
-      , expenditureAmountMlnEur = ceAmountMlnEur row
-      }
-    [ ExpenditureAmountMlnEur =. ceAmountMlnEur row
+  rawExecute
+    "INSERT OR REPLACE INTO expenditure (transaction_key, function_key, sector_key, period_key, amount_mln_eur) VALUES (?, ?, ?, ?, ?)"
+    [ PersistText (ceTransactionKey row)
+    , PersistText (ceFunctionKey row)
+    , PersistText (ceSectorKey row)
+    , PersistText (cePeriodKey row)
+    , maybe PersistNull PersistDouble (ceAmountMlnEur row)
     ]
 
--- | Upsert Rijksfinancien budget entries.
+-- | Upsert Rijksfinancien budget entries using raw INSERT OR REPLACE for speed.
 upsertBudgetEntries :: MonadIO m => Int -> Text -> [BudgetRow] -> SqlPersistT m ()
 upsertBudgetEntries year phase rows = forM_ rows $ \row ->
-  void $ upsertBy (UniqueBudgetEntry year phase (brChapterNumber row) (brArticleNumber row)
-                                     (brSubArticleNumber row) (brInstrumentNumber row)
-                                     (brRegulationNumber row) (brVuo row))
-    BudgetEntry
-      { budgetEntryYear = year
-      , budgetEntryPhase = phase
-      , budgetEntryMinister = brMinister row
-      , budgetEntryChapterName = brChapterName row
-      , budgetEntryChapterNumber = brChapterNumber row
-      , budgetEntryArticleName = brArticleName row
-      , budgetEntryArticleNumber = brArticleNumber row
-      , budgetEntrySubArticleName = brSubArticleName row
-      , budgetEntrySubArticleNumber = brSubArticleNumber row
-      , budgetEntryInstrumentName = brInstrumentName row
-      , budgetEntryInstrumentNumber = brInstrumentNumber row
-      , budgetEntryRegulationName = brRegulationName row
-      , budgetEntryRegulationNumber = brRegulationNumber row
-      , budgetEntryVuo = brVuo row
-      , budgetEntryAmount = brAmount row
-      }
-    [ BudgetEntryAmount =. brAmount row
-    , BudgetEntryMinister =. brMinister row
-    , BudgetEntryChapterName =. brChapterName row
-    , BudgetEntryArticleName =. brArticleName row
-    , BudgetEntrySubArticleName =. brSubArticleName row
-    , BudgetEntryInstrumentName =. brInstrumentName row
-    , BudgetEntryRegulationName =. brRegulationName row
+  rawExecute
+    "INSERT OR REPLACE INTO budget_entry (year, phase, minister, chapter_name, chapter_number, article_name, article_number, sub_article_name, sub_article_number, instrument_name, instrument_number, regulation_name, regulation_number, vuo, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    [ PersistInt64 (fromIntegral year)
+    , PersistText phase
+    , maybe PersistNull PersistText (brMinister row)
+    , maybe PersistNull PersistText (brChapterName row)
+    , PersistText (brChapterNumber row)
+    , maybe PersistNull PersistText (brArticleName row)
+    , PersistText (brArticleNumber row)
+    , maybe PersistNull PersistText (brSubArticleName row)
+    , PersistText (brSubArticleNumber row)
+    , maybe PersistNull PersistText (brInstrumentName row)
+    , PersistText (brInstrumentNumber row)
+    , maybe PersistNull PersistText (brRegulationName row)
+    , PersistText (brRegulationNumber row)
+    , PersistText (brVuo row)
+    , PersistInt64 (fromIntegral (brAmount row))
     ]
 
--- | Set a metadata key-value pair (last scrape time, etc.)
-setScrapeMeta :: MonadIO m => Text -> Text -> SqlPersistT m ()
-setScrapeMeta metaKey metaValue =
+-- | Set a metadata key-value pair (last sync time, etc.)
+setSyncMeta :: MonadIO m => Text -> Text -> SqlPersistT m ()
+setSyncMeta metaKey metaValue =
   void $ upsertBy (UniqueMetaKey metaKey)
-    ScrapeMeta { scrapeMetaKey = metaKey, scrapeMetaValue = metaValue }
-    [ ScrapeMetaValue =. metaValue ]
+    SyncMeta { syncMetaKey = metaKey, syncMetaValue = metaValue }
+    [ SyncMetaValue =. metaValue ]
 
 -- | Get a metadata value by key.
-getScrapeMeta :: MonadIO m => Text -> SqlPersistT m (Maybe Text)
-getScrapeMeta metaKey = do
+getSyncMeta :: MonadIO m => Text -> SqlPersistT m (Maybe Text)
+getSyncMeta metaKey = do
   result <- getBy (UniqueMetaKey metaKey)
-  pure $ fmap (scrapeMetaValue . entityVal) result
+  pure $ fmap (syncMetaValue . entityVal) result

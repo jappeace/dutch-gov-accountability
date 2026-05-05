@@ -2,7 +2,7 @@
 
 module DutchGov.CLI
   ( Command(..)
-  , ScrapeOptions(..)
+  , CollectOptions(..)
   , StatusOptions(..)
   , parseCommand
   ) where
@@ -10,16 +10,16 @@ module DutchGov.CLI
 import Data.Text (Text)
 import Options.Applicative
 
-import DutchGov.Scraper (Source(..))
+import DutchGov.Collector (Source(..))
 
 data Command
-  = Scrape ScrapeOptions
+  = Collect CollectOptions
   | Status StatusOptions
   deriving (Show)
 
-data ScrapeOptions = ScrapeOptions
-  { scrapeDb     :: Text
-  , scrapeSource :: Source
+data CollectOptions = CollectOptions
+  { collectDb     :: Text
+  , collectSource :: Source
   } deriving (Show)
 
 data StatusOptions = StatusOptions
@@ -31,18 +31,18 @@ parseCommand = execParser opts
   where
     opts = info (commandParser <**> helper)
       ( fullDesc
-      <> progDesc "Dutch government spending data scraper"
-      <> header "dutch-gov-accountability - CBS + Rijksfinancien scraper"
+      <> progDesc "Dutch government public spending data collector"
+      <> header "dutch-gov-accountability - CBS + Rijksfinancien open data collector"
       )
 
 commandParser :: Parser Command
 commandParser = subparser
-  ( command "scrape" (info scrapeParser (progDesc "Scrape data from government APIs"))
+  ( command "collect" (info collectParser (progDesc "Collect data from public government APIs"))
   <> command "status" (info statusParser (progDesc "Show database status"))
   )
 
-scrapeParser :: Parser Command
-scrapeParser = Scrape <$> (ScrapeOptions
+collectParser :: Parser Command
+collectParser = Collect <$> (CollectOptions
   <$> dbOption
   <*> sourceOption)
 
@@ -62,7 +62,7 @@ sourceOption :: Parser Source
 sourceOption = option readSource
   ( long "source"
   <> metavar "SOURCE"
-  <> help "Data source to scrape: cbs, rijksfinancien, or all"
+  <> help "Data source to collect: cbs, rijksfinancien, or all"
   <> value SourceAll
   <> showDefault
   )
