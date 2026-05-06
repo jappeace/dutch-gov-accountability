@@ -50,7 +50,7 @@ common common-options
     -threaded -rtsopts "-with-rtsopts=-N -M7G -T -Iw10"
 
   build-depends:
-      base >=4.9.1.0 && <4.22.0
+      base >=4.9.1.0 && <4.22.0 || ^>=4.22.0
 
   default-language: Haskell2010
 
@@ -82,17 +82,17 @@ library
   hs-source-dirs:
       src
   build-depends:
-      aeson
-    , bytestring
-    , http-client
-    , http-client-tls
-    , http-types
-    , monad-logger
-    , optparse-applicative
-    , persistent
-    , persistent-sqlite
-    , text
-    , time
+      aeson,
+      bytestring,
+      http-client,
+      http-client-tls,
+      http-types,
+      monad-logger,
+      optparse-applicative,
+      persistent,
+      persistent-sqlite,
+      text,
+      time
 
 executable exe
   import: common-options
@@ -100,9 +100,9 @@ executable exe
   hs-source-dirs:
       app
   build-depends:
-      dutch-gov-accountability
-    , persistent-sqlite
-    , text
+      dutch-gov-accountability,
+      persistent-sqlite,
+      text
   ghc-options: -Wno-unused-packages
 
 test-suite unit
@@ -118,11 +118,11 @@ test-suite unit
   hs-source-dirs:
       test
   build-depends:
-      aeson
-    , bytestring
-    , dutch-gov-accountability
-    , monad-logger
-    , persistent
-    , persistent-sqlite
-    , tasty
-    , tasty-hunit
+      aeson,
+      bytestring,
+      dutch-gov-accountability,
+      monad-logger,
+      persistent,
+      persistent-sqlite,
+      tasty,
+      tasty-hunit
